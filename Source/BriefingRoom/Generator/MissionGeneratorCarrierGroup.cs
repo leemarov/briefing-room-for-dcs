@@ -97,6 +97,11 @@ namespace BriefingRoom4DCS.Generator
             }
         }
 
+        private static double Lerp(double a, double b, double t)
+        {
+            return (1d - t) * a + t * b;
+        }
+
         private static Tuple<Coordinates, Coordinates> GetSpawnAndDestination(
             DCSMission mission,
             List<Coordinates> usedCoordinates,
@@ -166,10 +171,11 @@ namespace BriefingRoom4DCS.Generator
 
             var usingHint = mission.TemplateRecord.CarrierHints.ContainsKey(flightGroup.Carrier);
             var defaultFlightDistance = mission.PlayerAirbase.Coordinates.GetDistanceFrom(mission.ObjectivesCenter);
-            var location = Coordinates.Lerp(mission.ObjectivesCenter, mission.PlayerAirbase.Coordinates, (defaultFlightDistance > 90 ? 0.3 : 0.5));
-            if (usingHint)
+            var lerp_interp = Lerp(0.5, 0.3, Math.Clamp((defaultFlightDistance - 150000.0) / 50000.0, 0.0, 1.0));
+            var location = Coordinates.Lerp(mission.ObjectivesCenter, mission.PlayerAirbase.Coordinates, lerp_interp);
+            if (usingHint) {
                 location = new Coordinates(mission.TemplateRecord.CarrierHints[flightGroup.Carrier]);
-
+            }
             Coordinates? spawnPoint = UnitMakerSpawnPointSelector.GetNearestSpawnPoint(ref mission,new SpawnPointType[] { SpawnPointType.LandLarge }, location);
 
             if (!spawnPoint.HasValue)
